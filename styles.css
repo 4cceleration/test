@@ -2,6 +2,8 @@
 * { box-sizing:border-box; }
 body { margin:0; min-height:100vh; color:var(--ink); background:var(--cream); font-family:"Space Grotesk",sans-serif; background-image:radial-gradient(#17171722 1px, transparent 1px); background-size:16px 16px; }
 button { font:inherit; color:inherit; cursor:pointer; }
+.back-home { display:inline-block; margin:0 0 17px 4px; color:var(--ink); font:500 12px "DM Mono",monospace; letter-spacing:.04em; text-decoration:none; }
+.back-home:hover { text-decoration:underline; }
 .shell { width:min(920px, calc(100% - 32px)); margin:0 auto; padding:54px 0 38px; }
 .hero { position:relative; padding:26px 30px 30px; background:var(--blue); border:3px solid var(--ink); border-radius:28px; box-shadow:var(--shadow); overflow:hidden; }
 .hero::after { content:"?"; position:absolute; right:20px; bottom:-54px; font:190px "Archivo Black"; color:#fff3; line-height:1; }

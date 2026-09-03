@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1EA4D9" />
+    <title>¿Cómo percibes el mundo?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell"><a class="back-home" href="index.html">← Volver al inicio</a>
+      <header class="hero" id="hero">
+        <h1>¿Cómo <em>percibes</em><br />el mundo?</h1>
+        <p class="intro">Elige la alternativa que más se parezca a ti. No hay respuestas correctas: al final descubrirás tu canal perceptual predominante.</p>
+        <div class="legend" aria-label="Canales evaluados">
+          <span class="pill visual">Visual</span><span class="pill auditivo">Auditivo</span><span class="pill kinestesico">Kinestésico</span>
+        </div>
+      </header>
+
+      <section class="quiz-card" aria-live="polite">
+        <div class="quiz-topline">
+          <span id="step-label">PREGUNTA 01 DE 40</span>
+          <button class="restart" id="restart" type="button" hidden>↺ Reiniciar</button>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div id="quiz-content"></div>
+      </section>
+      <p class="footer-note">Tómate tu tiempo. Tus respuestas no se guardan.</p>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
