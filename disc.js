@@ -48,6 +48,11 @@ function formatPersonName(value) {
   return value.trim().toLocaleLowerCase('es-ES').replace(/(^|[\s'-])(\p{L})/gu, (_, separator, letter) => `${separator}${letter.toLocaleUpperCase('es-ES')}`);
 }
 
+function updateStartGlow() {
+  const letters = nameInput.value.match(/\p{L}/gu) || [];
+  startForm.classList?.toggle('is-ready-to-start', letters.length >= 4);
+}
+
 function isValidOption(value) {
   return Number.isInteger(value) && value >= 0 && value < 4;
 }
@@ -153,11 +158,13 @@ function beginTest() {
 nameInput.addEventListener('input', () => {
   nameInput.setCustomValidity('');
   personName = formatPersonName(nameInput.value);
+  updateStartGlow();
   if (current === -1 && !isComplete) saveDraft();
 });
 nameInput.addEventListener('blur', () => {
   nameInput.value = formatPersonName(nameInput.value);
   personName = nameInput.value;
+  updateStartGlow();
   if (current === -1 && !isComplete) saveDraft();
 });
 
@@ -180,6 +187,7 @@ function render() {
     step.textContent = '';
     fill.style.width = '0%';
     nameInput.value = personName;
+    updateStartGlow();
     return;
   }
 
