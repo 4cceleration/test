@@ -40,21 +40,375 @@ const questions = [
 ['En la ciudad, ¿qué echas más de menos del campo?',['El aire limpio y refrescante','Los paisajes','La tranquilidad'],['K','V','A']],
 ['Si te ofrecieran estos empleos, ¿cuál elegirías?',['Director de una estación de radio','Director de un club deportivo','Director de una revista'],['A','K','V']]
 ];
-let current = -1; let personName = ''; let lastResult = null; const answers = Array(questions.length).fill(null);
-const content = document.querySelector('#quiz-content'), step = document.querySelector('#step-label'), fill = document.querySelector('#progress-fill'), restart = document.querySelector('#restart'), hero = document.querySelector('#hero');
-const channelNames = {V:'Visual',A:'Auditivo',K:'Kinestésico'};
-function render(){
-  if(current === -1){ hero.hidden=false; step.textContent='ANTES DE EMPEZAR'; fill.style.width='0%'; content.innerHTML=`<section class="welcome"><h2>Primero, cuéntame<br>¿cómo te llamas?</h2><input class="name-input" id="name" autocomplete="name" placeholder="Escribe tu nombre" value="${personName}"><div class="nav"><span></span><button class="next" type="button">Comenzar →</button></div></section>`; const input=document.querySelector('#name'); const begin=()=>{personName=input.value.trim()||'explorador/a';current=0;render()}; document.querySelector('.next').onclick=begin; input.onkeydown=e=>{if(e.key==='Enter')begin()}; input.focus(); return; }
-  hero.hidden=true;
-  const [title, options] = questions[current]; step.textContent=`PREGUNTA ${String(current+1).padStart(2,'0')} DE ${questions.length}`; fill.style.width=`${((current+1)/questions.length)*100}%`; content.innerHTML=`<h2 class="question">${title}</h2><div class="answers">${options.map((option,i)=>`<button class="answer ${answers[current]===i?'selected':''}" data-index="${i}" type="button"><span class="letter">${'ABC'[i]}</span><span>${option}</span></button>`).join('')}</div><div class="nav"><button class="back" type="button">← Anterior</button><span></span><button class="next" type="button" ${answers[current]===null?'disabled':''}>${current===questions.length-1?'Ver resultado →':'Siguiente →'}</button></div>`; document.querySelectorAll('.answer').forEach(btn=>btn.onclick=()=>{answers[current]=+btn.dataset.index;render()}); document.querySelector('.back').onclick=()=>{current--;render()}; document.querySelector('.next').onclick=()=> current===questions.length-1?results():(current++,render());
+const STORAGE_KEY = 'test-draft:vak:v1';
+const DRAFT_VERSION = 1;
+let current = -1;
+let personName = '';
+let lastResult = null;
+let isComplete = false;
+const answers = Array(questions.length).fill(null);
+const content = document.querySelector('#quiz-content'), step = document.querySelector('#step-label'), fill = document.querySelector('#progress-fill'), restart = document.querySelector('#restart'), hero = document.querySelector('#hero'), quizTopline = document.querySelector('.quiz-topline'), progressTrack = document.querySelector('.progress-track'), quizCard = document.querySelector('#quiz-card'), nameInput = document.querySelector('#name'), startForm = document.querySelector('#start-form');
+const channelNames = { V: 'Visual', A: 'Auditivo', K: 'Kinestésico' };
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character]);
 }
-function results(){ hero.hidden=true; const score={V:0,A:0,K:0}; answers.forEach((answer,i)=>score[questions[i][2][answer]]++); const winner=Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0]; const copy={V:'Procesas mejor lo que ves: imágenes, esquemas, colores y demostraciones visuales te ayudan a conectar ideas.',A:'Procesas mejor lo que escuchas: las conversaciones, explicaciones y sonidos te dan las pistas más claras.',K:'Procesas mejor mediante la experiencia: movimiento, práctica y sensaciones son claves para aprender y decidir.'}; const pct=key=>Math.round(score[key]/questions.length*100); lastResult={score,winner,pct,copy:copy[winner]}; step.textContent='RESULTADO FINAL'; fill.style.width='100%'; restart.hidden=false; content.innerHTML=`<h2 class="result-title">¡Listo, ${personName}!</h2><p class="result-copy">Tu forma más natural de percibir la información aparece destacada aquí.</p><section class="result-hero"><div><p class="winner-overline">CANAL PERCEPTUAL PREDOMINANTE</p><p class="winner-name">${channelNames[winner]}</p></div><div class="winner-score"><strong>${pct(winner)}%</strong><span>${score[winner]} RESPUESTAS</span></div></section><section class="bar-chart" aria-label="Gráfica de resultados por canal">${['V','A','K'].map(key=>`<div class="chart-row ${key===winner?'is-winner':''}"><span class="chart-label">${channelNames[key]}</span><div class="chart-track"><div class="chart-value bar-${key.toLowerCase()}" style="width:${pct(key)}%">${pct(key)}%</div></div><div><div class="chart-total">${score[key]}</div><span class="chart-percent">DE 40</span></div></div>`).join('')}</section><p class="result-message">${copy[winner]} Recuerda: los tres canales forman parte de ti; este resultado solo indica cuál aparece con mayor frecuencia en este cuestionario.</p><button class="download-result" id="download-result" type="button">↓ Descargar mi resultado</button>`; document.querySelector('#download-result').onclick=downloadResult; }
+
+function formatPersonName(value) {
+  return value.trim().toLocaleLowerCase('es-ES').replace(/(^|[\s'-])(\p{L})/gu, (_, separator, letter) => `${separator}${letter.toLocaleUpperCase('es-ES')}`);
+}
+
+function allAnswersComplete() {
+  return answers.every(answer => Number.isInteger(answer) && answer >= 0 && answer < 3);
+}
+
+function clearDraft() {
+  try { window.localStorage.removeItem(STORAGE_KEY); } catch (_) { /* El test sigue funcionando si el almacenamiento no está disponible. */ }
+}
+
+function saveDraft() {
+  const status = isComplete ? 'complete' : current === -1 ? 'intro' : 'in_progress';
+  const draft = { version: DRAFT_VERSION, questionCount: questions.length, status, personName, current, answers: [...answers], updatedAt: Date.now() };
+  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draft)); } catch (_) { /* El test sigue funcionando si el almacenamiento no está disponible. */ }
+}
+
+function loadDraft() {
+  let draft;
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    draft = JSON.parse(saved);
+  } catch (_) {
+    return;
+  }
+
+  const isValidStatus = draft && ['intro', 'in_progress', 'complete'].includes(draft.status);
+  const hasValidName = typeof draft?.personName === 'string' && draft.personName.length <= 120;
+  const hasValidAnswers = Array.isArray(draft?.answers) && draft.answers.length === questions.length && draft.answers.every(answer => answer === null || (Number.isInteger(answer) && answer >= 0 && answer < 3));
+  const hasValidBase = draft?.version === DRAFT_VERSION && draft.questionCount === questions.length && isValidStatus && hasValidName && hasValidAnswers;
+  if (!hasValidBase) { clearDraft(); return; }
+
+  const normalizedName = formatPersonName(draft.personName);
+  const isIntro = draft.status === 'intro' && draft.current === -1 && draft.answers.every(answer => answer === null);
+  const isInProgress = draft.status === 'in_progress' && normalizedName && Number.isInteger(draft.current) && draft.current >= 0 && draft.current < questions.length;
+  const isFinished = draft.status === 'complete' && normalizedName && draft.current === questions.length - 1 && draft.answers.every(answer => answer !== null);
+  if (!isIntro && !isInProgress && !isFinished) { clearDraft(); return; }
+
+  personName = normalizedName;
+  answers.splice(0, answers.length, ...draft.answers);
+  current = draft.current;
+  isComplete = isFinished;
+}
+
+function beginTest() {
+  const name = formatPersonName(nameInput.value);
+  if (!name) {
+    nameInput.setCustomValidity('Escribe tu nombre para comenzar.');
+    nameInput.reportValidity();
+    nameInput.focus();
+    return;
+  }
+  nameInput.value = name;
+  nameInput.setCustomValidity('');
+  personName = name;
+  current = 0;
+  isComplete = false;
+  saveDraft();
+  render();
+}
+
+nameInput.addEventListener('input', () => {
+  nameInput.setCustomValidity('');
+  personName = formatPersonName(nameInput.value);
+  if (current === -1 && !isComplete) saveDraft();
+});
+nameInput.addEventListener('blur', () => {
+  nameInput.value = formatPersonName(nameInput.value);
+  personName = nameInput.value;
+  if (current === -1 && !isComplete) saveDraft();
+});
+startForm.addEventListener('submit', event => { event.preventDefault(); beginTest(); });
+
+function render() {
+  if (isComplete) { renderResults(); return; }
+  if (current === -1) {
+    hero.hidden = false;
+    quizCard.hidden = true;
+    quizTopline.hidden = true;
+    progressTrack.hidden = true;
+    restart.hidden = true;
+    step.textContent = '';
+    fill.style.width = '0%';
+    nameInput.value = personName;
+    return;
+  }
+
+  quizCard.hidden = false;
+  quizTopline.hidden = false;
+  progressTrack.hidden = false;
+  restart.hidden = false;
+  hero.hidden = true;
+  const [title, options] = questions[current];
+  step.textContent = `PREGUNTA ${String(current + 1).padStart(2, '0')} DE ${questions.length}`;
+  fill.style.width = `${((current + 1) / questions.length) * 100}%`;
+  content.innerHTML = `<h2 class="question">${title}</h2><div class="answers">${options.map((option, index) => `<button class="answer ${answers[current] === index ? 'selected' : ''}" data-index="${index}" type="button"><span class="letter">${'ABC'[index]}</span><span>${option}</span></button>`).join('')}</div><div class="nav"><button class="back" type="button" ${current === 0 ? 'disabled' : ''}>← Anterior</button><span></span><button class="next" type="button" ${answers[current] === null ? 'disabled' : ''}>${current === questions.length - 1 ? 'Ver resultado →' : 'Siguiente →'}</button></div>`;
+  document.querySelectorAll('.answer').forEach(button => {
+    button.onclick = () => {
+      answers[current] = Number(button.dataset.index);
+      saveDraft();
+      render();
+    };
+  });
+  document.querySelector('.back').onclick = () => {
+    if (current === 0) return;
+    current -= 1;
+    saveDraft();
+    render();
+  };
+  document.querySelector('.next').onclick = () => {
+    if (current === questions.length - 1) completeTest();
+    else {
+      current += 1;
+      saveDraft();
+      render();
+    }
+  };
+}
+
+function completeTest() {
+  if (!allAnswersComplete()) return;
+  current = questions.length - 1;
+  isComplete = true;
+  saveDraft();
+  render();
+}
+
+function renderResults() {
+  if (!allAnswersComplete()) {
+    isComplete = false;
+    saveDraft();
+    render();
+    return;
+  }
+  hero.hidden = true;
+  quizCard.hidden = false;
+  quizTopline.hidden = true;
+  progressTrack.hidden = true;
+  const score = { V: 0, A: 0, K: 0 };
+  answers.forEach((answer, index) => { score[questions[index][2][answer]] += 1; });
+  const winner = Object.entries(score).sort((a, b) => b[1] - a[1])[0][0];
+  const copy = { V: 'Procesas mejor lo que ves: imágenes, esquemas, colores y demostraciones visuales te ayudan a conectar ideas.', A: 'Procesas mejor lo que escuchas: las conversaciones, explicaciones y sonidos te dan las pistas más claras.', K: 'Procesas mejor mediante la experiencia: movimiento, práctica y sensaciones son claves para aprender y decidir.' };
+  const pct = key => Math.round(score[key] / questions.length * 100);
+  lastResult = { score, winner, pct, copy: copy[winner] };
+  restart.hidden = true;
+  content.innerHTML = `<h2 class="result-title">${escapeHtml(personName)}</h2><p class="result-copy">Tu forma más natural de percibir la información aparece destacada aquí.</p><section class="result-hero"><div><p class="winner-overline">CANAL PERCEPTUAL PREDOMINANTE</p><p class="winner-name">${channelNames[winner]}</p></div><div class="winner-score"><strong>${pct(winner)}%</strong><span>${score[winner]} RESPUESTAS</span></div></section><section class="bar-chart" aria-label="Gráfica de resultados por canal">${['V', 'A', 'K'].map(key => `<div class="chart-row ${key === winner ? 'is-winner' : ''}"><span class="chart-label">${channelNames[key]}</span><div class="chart-track"><div class="chart-value bar-${key.toLowerCase()}" style="width:${pct(key)}%">${pct(key)}%</div></div><div><div class="chart-total">${score[key]}</div><span class="chart-percent">DE 40</span></div></div>`).join('')}</section><p class="result-message">${copy[winner]} Recuerda: los tres canales forman parte de ti; este resultado solo indica cuál aparece con mayor frecuencia en este cuestionario.</p><button class="download-result" id="download-result" type="button">↓ Descargar mi resultado</button><button class="restart-result" id="restart-result" type="button">↺ Reiniciar test</button>`;
+  document.querySelector('#download-result').onclick = downloadResult;
+  document.querySelector('#restart-result').onclick = resetTest;
+}
 function roundedRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();ctx.stroke();}
-function downloadResult(){ if(!lastResult)return; const {score,winner,pct}=lastResult, canvas=document.createElement('canvas'), ctx=canvas.getContext('2d'), W=1400,H=820; canvas.width=W;canvas.height=H;
-  ctx.fillStyle='#F2E2CE';ctx.fillRect(0,0,W,H);ctx.fillStyle='#1EA4D9';ctx.strokeStyle='#121212';ctx.lineWidth=8;roundedRect(ctx,48,45,W-96,335,34);
-  ctx.fillStyle='#121212';roundedRect(ctx,88,83,555,54,12);ctx.fillStyle='#fff';ctx.font='500 24px monospace';ctx.fillText('TEST DE CANALES PERCEPTUALES',112,119);
-  ctx.fillStyle='#121212';ctx.font='900 42px sans-serif';ctx.fillText(`RESULTADO DE ${personName.toUpperCase()}`,90,195);ctx.font='900 122px sans-serif';ctx.fillText(channelNames[winner].toUpperCase(),86,310);
-  ctx.fillStyle='#F2E2CE';ctx.beginPath();ctx.arc(1190,225,100,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#121212';ctx.textAlign='center';ctx.font='900 70px sans-serif';ctx.fillText(`${pct(winner)}%`,1190,245);ctx.font='500 17px monospace';ctx.fillText('PREDOMINANTE',1190,277);ctx.textAlign='left';
-  const colors={V:'#23B7D9',A:'#F23030',K:'#1FA65A'}, keys=['V','A','K']; keys.forEach((key,i)=>{const y=448+i*105;ctx.fillStyle=colors[key];ctx.strokeStyle='#121212';ctx.lineWidth=6;roundedRect(ctx,74,y,1252,77,18);ctx.fillStyle='#121212';ctx.font='900 29px sans-serif';ctx.fillText(channelNames[key],100,y+48);ctx.fillStyle='#fff';ctx.strokeStyle='#121212';roundedRect(ctx,355,y+20,800,37,18);ctx.fillStyle=colors[key];ctx.strokeStyle='#121212';roundedRect(ctx,358,y+23,Math.max(15,792*pct(key)/100),31,14);ctx.fillStyle=key==='V'?'#121212':'#fff';ctx.font='900 39px sans-serif';ctx.textAlign='right';ctx.fillText(String(score[key]),1296,y+50);ctx.textAlign='left';});
-  ctx.fillStyle='#121212';ctx.font='500 18px monospace';ctx.fillText('TU MAPA PERCEPTUAL · 40 RESPUESTAS',76,780);canvas.toBlob(blob=>{const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`resultado-perceptual-${personName.toLowerCase().replace(/[^a-z0-9]+/gi,'-')||'test'}.png`;link.click();URL.revokeObjectURL(link.href);},'image/png'); }
-restart.onclick=()=>{answers.fill(null);current=-1;personName='';restart.hidden=true;render()}; render();
+function downloadResult() {
+  if (!lastResult) return;
+
+  const { score, winner, pct, copy } = lastResult;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1600;
+  const H = 2680;
+  const margin = 56;
+  const ink = '#151515';
+  const cream = '#FFFCF7';
+  const sand = '#F4E4CF';
+  const cyan = '#27B5D7';
+  const colors = { V: '#27B5D7', A: '#FB4141', K: '#22A75C' };
+  const keys = ['V', 'A', 'K'];
+
+  canvas.width = W;
+  canvas.height = H;
+  ctx.fillStyle = cream;
+  ctx.fillRect(0, 0, W, H);
+
+  const path = (x, y, width, height, radius) => {
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, radius);
+  };
+  const card = (x, y, width, height, radius, fill, shadow = 0) => {
+    ctx.save();
+    if (shadow) {
+      ctx.shadowColor = 'rgba(21, 21, 21, .94)';
+      ctx.shadowOffsetY = shadow;
+      ctx.shadowBlur = 0;
+    }
+    path(x, y, width, height, radius);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+    ctx.restore();
+  };
+  const wrapText = (text, maxWidth) => {
+    const lines = [];
+    let line = '';
+    text.split(/\s+/).forEach(word => {
+      const next = line ? `${line} ${word}` : word;
+      if (line && ctx.measureText(next).width > maxWidth) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = next;
+      }
+    });
+    if (line) lines.push(line);
+    return lines;
+  };
+  const drawLines = (lines, x, baseline, lineHeight) => {
+    lines.forEach((line, index) => ctx.fillText(line, x, baseline + index * lineHeight));
+  };
+  const drawSparkle = (x, y, radius) => {
+    ctx.save();
+    ctx.fillStyle = sand;
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y - radius);
+    ctx.bezierCurveTo(x + radius * .14, y - radius * .27, x + radius * .28, y - radius * .14, x + radius, y);
+    ctx.bezierCurveTo(x + radius * .28, y + radius * .14, x + radius * .14, y + radius * .27, x, y + radius);
+    ctx.bezierCurveTo(x - radius * .14, y + radius * .27, x - radius * .28, y + radius * .14, x - radius, y);
+    ctx.bezierCurveTo(x - radius * .28, y - radius * .14, x - radius * .14, y - radius * .27, x, y - radius);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  };
+  const drawTrack = (x, y, width, height, value, color) => {
+    path(x, y, width, height, height / 2);
+    ctx.fillStyle = sand;
+    ctx.fill();
+    ctx.save();
+    path(x, y, width, height, height / 2);
+    ctx.clip();
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, Math.max(0, Math.min(width, width * value / 100)), height);
+    ctx.restore();
+    path(x, y, width, height, height / 2);
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  };
+
+  let nameSize = 102;
+  let nameLines = [];
+  while (nameSize >= 62) {
+    ctx.font = `900 ${nameSize}px "Archivo Black", sans-serif`;
+    nameLines = wrapText(personName || 'Tu resultado', W - margin * 2);
+    if (nameLines.length <= 2) break;
+    nameSize -= 2;
+  }
+  ctx.fillStyle = ink;
+  ctx.font = `900 ${nameSize}px "Archivo Black", sans-serif`;
+  const nameLineHeight = Math.round(nameSize * 1.18);
+  const nameBaseline = 178;
+  drawLines(nameLines, margin, nameBaseline, nameLineHeight);
+
+  ctx.fillStyle = ink;
+  ctx.font = '600 44px "Space Grotesk", sans-serif';
+  const introLines = wrapText('Tu forma más natural de percibir la información aparece destacada aquí.', W - margin * 2 - 70);
+  const introBaseline = nameBaseline + (nameLines.length - 1) * nameLineHeight + 102;
+  drawLines(introLines, margin, introBaseline, 60);
+
+  const heroY = introBaseline + (introLines.length - 1) * 60 + 150;
+  const heroH = 645;
+  card(margin, heroY, W - margin * 2, heroH, 54, cyan, 12);
+  drawSparkle(1240, heroY + 220, 165);
+  ctx.save();
+  ctx.globalAlpha = .15;
+  ctx.fillStyle = cream;
+  ctx.font = '900 390px "Archivo Black", sans-serif';
+  ctx.fillText('?', 1300, heroY + 560);
+  ctx.restore();
+  ctx.fillStyle = ink;
+  ctx.font = '500 30px "DM Mono", monospace';
+  ctx.fillText('CANAL PERCEPTUAL PREDOMINANTE', margin + 76, heroY + 145);
+  let winnerSize = 142;
+  const winnerName = channelNames[winner].toLocaleUpperCase('es-ES');
+  while (winnerSize > 76) {
+    ctx.font = `900 ${winnerSize}px "Archivo Black", sans-serif`;
+    if (ctx.measureText(winnerName).width <= W - margin * 2 - 150) break;
+    winnerSize -= 2;
+  }
+  ctx.font = `900 ${winnerSize}px "Archivo Black", sans-serif`;
+  ctx.fillStyle = sand;
+  ctx.fillText(winnerName, margin + 88, heroY + 370);
+  ctx.fillStyle = ink;
+  ctx.fillText(winnerName, margin + 74, heroY + 354);
+  ctx.fillStyle = ink;
+  ctx.font = '600 36px "Space Grotesk", sans-serif';
+  ctx.fillText(`${pct(winner)}% de tus respuestas`, margin + 78, heroY + 455);
+
+  const rowsY = heroY + heroH + 75;
+  const rowH = 214;
+  const rowGap = 44;
+  keys.forEach((key, index) => {
+    const y = rowsY + index * (rowH + rowGap);
+    card(margin, y, W - margin * 2, rowH, 34, '#FFFFFF', index === 2 ? 10 : 0);
+    ctx.fillStyle = ink;
+    ctx.font = '700 39px "Space Grotesk", sans-serif';
+    ctx.fillText(channelNames[key], margin + 42, y + 127);
+    const trackX = 420;
+    const trackY = y + 73;
+    const trackW = 810;
+    const trackH = 68;
+    drawTrack(trackX, trackY, trackW, trackH, pct(key), colors[key]);
+    const fillWidth = trackW * pct(key) / 100;
+    ctx.font = '700 29px "Space Grotesk", sans-serif';
+    if (fillWidth > 112) {
+      ctx.fillStyle = key === 'V' ? ink : '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${pct(key)}%`, trackX + fillWidth / 2, trackY + 45);
+    } else {
+      ctx.fillStyle = ink;
+      ctx.textAlign = 'left';
+      ctx.fillText(`${pct(key)}%`, trackX + fillWidth + 18, trackY + 45);
+    }
+    ctx.textAlign = 'right';
+    ctx.fillStyle = ink;
+    ctx.font = '900 68px "Archivo Black", sans-serif';
+    ctx.fillText(String(score[key]), W - margin - 38, y + 108);
+    ctx.font = '500 25px "DM Mono", monospace';
+    ctx.fillText(`DE ${questions.length}`, W - margin - 38, y + 151);
+    ctx.textAlign = 'left';
+  });
+
+  const message = `${copy || ''} Recuerda: los tres canales forman parte de ti; este resultado solo indica cuál aparece con mayor frecuencia en este cuestionario.`.trim();
+  ctx.font = '600 43px "Space Grotesk", sans-serif';
+  const messageLines = wrapText(message, W - margin * 2 - 92);
+  const messageY = rowsY + rowH * 3 + rowGap * 2 + 90;
+  const messageH = Math.max(520, 126 + messageLines.length * 61);
+  card(margin, messageY, W - margin * 2, messageH, 36, sand);
+  ctx.fillStyle = ink;
+  ctx.font = '600 43px "Space Grotesk", sans-serif';
+  drawLines(messageLines, margin + 46, messageY + 82, 61);
+
+  canvas.toBlob(blob => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `resultado-perceptual-${personName.toLowerCase().replace(/[^a-z0-9]+/gi, '-') || 'test'}.png`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, 'image/png');
+}
+function resetTest() {
+  answers.fill(null);
+  current = -1;
+  personName = '';
+  lastResult = null;
+  isComplete = false;
+  restart.hidden = true;
+  clearDraft();
+  render();
+}
+
+restart.onclick = resetTest;
+loadDraft();
+render();

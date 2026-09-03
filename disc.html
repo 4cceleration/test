@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#6256e9" />
-    <title>Test DISC · Pausa</title>
+    <title>Test DISC</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,23 +15,35 @@
     <main class="shell">
       <a class="back-home" href="index.html">← Volver al inicio</a>
       <header class="hero" id="hero">
-        <h1>¿Qué estilo guía<br />tu manera de <em>actuar?</em></h1>
-        <p class="intro">Elige la frase que más se parezca a tu comportamiento habitual. No hay respuestas correctas: al final descubrirás tu estilo DISC predominante.</p>
-        <div class="legend" aria-label="Estilos evaluados">
-          <span class="pill d">D · Dominancia</span><span class="pill i">I · Influencia</span><span class="pill s">S · Estabilidad</span><span class="pill c">C · Conciencia</span>
-        </div>
+        <h1>¿Qué estilo guía<br class="desktop-break" /> tu manera de <em>actuar?</em></h1>
+        <section class="hero-guide" aria-label="Cómo funciona este test">
+          <div class="guide-lead">
+            <p>Explora tu estilo predominante al tomar decisiones, relacionarte y trabajar con otras personas. Verás 28 grupos con cuatro palabras que describen formas de ser, como “amable” o “directo”; en cada grupo, elige <strong>la que más se parece a ti (+)</strong> y <strong>otra que menos se parece a ti (−)</strong>.</p>
+          </div>
+          <div class="guide-steps">
+            <span><b>1</b> Escribe tu nombre</span>
+            <span><b>2</b> Marca una opción Más y otra Menos</span>
+            <span><b>3</b> Mira y descarga tu resultado</span>
+          </div>
+          <div class="guide-meta"><span>28 grupos de palabras</span><span>Resultado de tus 4 estilos</span><span>Orientativo y personal</span></div>
+        </section>
+        <form class="hero-start" id="start-form">
+          <input class="hero-name-input" id="name" autocomplete="name" aria-label="Tu nombre" placeholder="Escribe tu nombre para empezar" required />
+          <button class="hero-start-button" type="submit">Comenzar <span>→</span></button>
+        </form>
       </header>
 
-      <section class="quiz-card" aria-live="polite">
+      <section class="quiz-card" id="quiz-card" aria-live="polite" hidden>
         <div class="quiz-topline">
-          <span id="step-label">ANTES DE EMPEZAR</span>
-          <button class="restart" id="restart" type="button" hidden>↺ Reiniciar</button>
+          <span id="step-label"></span>
+          <button class="restart" id="restart" type="button" hidden>↺ Reiniciar test</button>
         </div>
         <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
         <div id="quiz-content"></div>
       </section>
-      <p class="footer-note">DISC es una herramienta de autoconocimiento orientativa; no es un diagnóstico psicológico.</p>
+      <p class="footer-note">Tu avance se guarda solo en este dispositivo. DISC es una herramienta de autoconocimiento orientativa; no es un diagnóstico psicológico.</p>
     </main>
+    <script src="disc-data.js"></script>
     <script src="disc.js"></script>
   </body>
 </html>
