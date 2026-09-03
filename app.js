@@ -1,0 +1,60 @@
+const questions = [
+['¿Cuál de estas actividades disfrutas más?',['Escuchar música','Ver películas','Bailar con buena música'],['A','V','K']],
+['¿Qué programa de televisión prefieres?',['Reportajes de descubrimientos y lugares','Cómico y de entretenimiento','Noticias del mundo'],['V','K','A']],
+['Cuando conversas con otra persona, tú…',['La escuchas atentamente','La observas','Tiendes a tocarla'],['A','V','K']],
+['Si pudieras adquirir uno de estos artículos, ¿cuál elegirías?',['Un jacuzzi','Un estéreo','Un televisor'],['K','A','V']],
+['¿Qué prefieres hacer un sábado por la tarde?',['Quedarte en casa','Ir a un concierto','Ir al cine'],['K','A','V']],
+['¿Qué tipo de examen se te facilita más?',['Examen oral','Examen escrito','Examen de opción múltiple'],['A','V','K']],
+['¿Cómo te orientas más fácilmente?',['Mediante el uso de un mapa','Pidiendo indicaciones','A través de la intuición'],['V','A','K']],
+['¿En qué prefieres ocupar tu tiempo en un lugar de descanso?',['Pensar','Caminar por los alrededores','Descansar'],['A','V','K']],
+['¿Qué te halaga más?',['Que te digan que tienes buen aspecto','Que te digan que tienes un trato muy agradable','Que te digan que tienes una conversación interesante'],['V','K','A']],
+['¿Cuál de estos ambientes te atrae más?',['Uno en el que se sienta un clima agradable','Uno en el que se escuchen las olas del mar','Uno con una hermosa vista al océano'],['K','A','V']],
+['¿De qué manera se te facilita aprender algo?',['Repitiendo en voz alta','Escribiéndolo varias veces','Relacionándolo con algo divertido'],['A','V','K']],
+['¿A qué evento preferirías asistir?',['A una reunión social','A una exposición de arte','A una conferencia'],['K','V','A']],
+['¿De qué manera te formas una opinión de otras personas?',['Por la sinceridad en su voz','Por la forma de estrecharte la mano','Por su aspecto'],['A','K','V']],
+['¿Cómo te consideras?',['Atlético','Intelectual','Sociable'],['K','V','A']],
+['¿Qué tipo de películas te gustan más?',['Clásicas','De acción','De amor'],['V','K','A']],
+['¿Cómo prefieres mantenerte en contacto con otra persona?',['Por correo electrónico','Tomando un café juntos','Por teléfono'],['V','K','A']],
+['¿Cuál frase se identifica más contigo?',['Me gusta que mi coche se sienta bien al conducirlo','Percibo hasta el más ligero ruido que hace mi coche','Es importante que mi coche esté limpio por fuera y por dentro'],['K','A','V']],
+['¿Cómo prefieres pasar el tiempo con tu pareja?',['Conversando','Acariciándose','Mirando algo juntos'],['A','K','V']],
+['Si no encuentras las llaves en una bolsa…',['La buscas mirando','Sacudes la bolsa para oír el ruido','Buscas al tacto'],['V','A','K']],
+['Cuando tratas de recordar algo, ¿cómo lo haces?',['A través de imágenes','A través de emociones','A través de sonidos'],['V','K','A']],
+['Si tuvieras dinero, ¿qué harías?',['Comprar una casa','Viajar y conocer el mundo','Adquirir un estudio de grabación'],['V','K','A']],
+['¿Con qué frase te identificas más?',['Reconozco a las personas por su voz','No recuerdo el aspecto de la gente','Recuerdo el aspecto de alguien, pero no su nombre'],['A','K','V']],
+['En una isla desierta, ¿qué preferirías llevar?',['Algunos buenos libros','Un radio portátil de alta frecuencia','Golosinas y comida enlatada'],['V','A','K']],
+['¿Cuál entretenimiento prefieres?',['Tocar un instrumento musical','Sacar fotografías','Actividades manuales'],['A','V','K']],
+['¿Cómo es tu forma de vestir?',['Impecable','Informal','Muy informal'],['V','A','K']],
+['¿Qué te gusta más de una fogata nocturna?',['El calor del fuego y los bombones asados','El sonido del fuego quemando la leña','Mirar el fuego y las estrellas'],['K','A','V']],
+['¿Cómo se te facilita entender algo?',['Cuando te lo explican verbalmente','Cuando utilizan medios visuales','Cuando se realiza a través de alguna actividad'],['A','V','K']],
+['¿Por qué te distingues?',['Por tener una gran intuición','Por ser un buen conversador','Por ser un buen observador'],['K','A','V']],
+['¿Qué disfrutas más de un amanecer?',['La emoción de vivir un nuevo día','Las tonalidades del cielo','El canto de las aves'],['K','V','A']],
+['Si pudieras elegir, ¿qué preferirías ser?',['Un gran médico','Un gran músico','Un gran pintor'],['K','A','V']],
+['Al elegir tu ropa, ¿qué es lo más importante?',['Que sea adecuada','Que luzca bien','Que sea cómoda'],['A','V','K']],
+['¿Qué disfrutas más de una habitación?',['Que sea silenciosa','Que sea confortable','Que esté limpia y ordenada'],['A','K','V']],
+['¿Qué es más sexy para ti?',['Una iluminación tenue','El perfume','Cierto tipo de música'],['V','K','A']],
+['¿A qué espectáculo preferirías asistir?',['A un concierto de música','A un espectáculo de magia','A una muestra gastronómica'],['A','V','K']],
+['¿Qué te atrae más de una persona?',['Su trato y forma de ser','Su aspecto físico','Su conversación'],['K','V','A']],
+['Cuando vas de compras, ¿dónde pasas más tiempo?',['En una librería','En una perfumería','En una tienda de discos'],['V','K','A']],
+['¿Cuál es tu idea de una noche romántica?',['A la luz de las velas','Con música romántica','Bailando tranquilamente'],['V','A','K']],
+['¿Qué disfrutas más de viajar?',['Conocer personas y hacer nuevos amigos','Conocer lugares nuevos','Aprender sobre otras costumbres'],['K','V','A']],
+['En la ciudad, ¿qué echas más de menos del campo?',['El aire limpio y refrescante','Los paisajes','La tranquilidad'],['K','V','A']],
+['Si te ofrecieran estos empleos, ¿cuál elegirías?',['Director de una estación de radio','Director de un club deportivo','Director de una revista'],['A','K','V']]
+];
+let current = -1; let personName = ''; let lastResult = null; const answers = Array(questions.length).fill(null);
+const content = document.querySelector('#quiz-content'), step = document.querySelector('#step-label'), fill = document.querySelector('#progress-fill'), restart = document.querySelector('#restart'), hero = document.querySelector('#hero');
+const channelNames = {V:'Visual',A:'Auditivo',K:'Kinestésico'};
+function render(){
+  if(current === -1){ hero.hidden=false; step.textContent='ANTES DE EMPEZAR'; fill.style.width='0%'; content.innerHTML=`<section class="welcome"><h2>Primero, cuéntame<br>¿cómo te llamas?</h2><p>Personalizaremos tu resultado al finalizar. El test toma alrededor de 5 minutos.</p><label class="name-label" for="name">TU NOMBRE</label><input class="name-input" id="name" autocomplete="name" placeholder="Escribe tu nombre" value="${personName}"><div class="nav"><span></span><button class="next" type="button">Comenzar →</button></div></section>`; const input=document.querySelector('#name'); const begin=()=>{personName=input.value.trim()||'explorador/a';current=0;render()}; document.querySelector('.next').onclick=begin; input.onkeydown=e=>{if(e.key==='Enter')begin()}; input.focus(); return; }
+  hero.hidden=true;
+  const [title, options] = questions[current]; step.textContent=`PREGUNTA ${String(current+1).padStart(2,'0')} DE ${questions.length}`; fill.style.width=`${((current+1)/questions.length)*100}%`; content.innerHTML=`<h2 class="question">${title}</h2><div class="answers">${options.map((option,i)=>`<button class="answer ${answers[current]===i?'selected':''}" data-index="${i}" type="button"><span class="letter">${'ABC'[i]}</span><span>${option}</span></button>`).join('')}</div><div class="nav"><button class="back" type="button">← Anterior</button><span></span><button class="next" type="button" ${answers[current]===null?'disabled':''}>${current===questions.length-1?'Ver resultado →':'Siguiente →'}</button></div>`; document.querySelectorAll('.answer').forEach(btn=>btn.onclick=()=>{answers[current]=+btn.dataset.index;render()}); document.querySelector('.back').onclick=()=>{current--;render()}; document.querySelector('.next').onclick=()=> current===questions.length-1?results():(current++,render());
+}
+function results(){ hero.hidden=true; const score={V:0,A:0,K:0}; answers.forEach((answer,i)=>score[questions[i][2][answer]]++); const winner=Object.entries(score).sort((a,b)=>b[1]-a[1])[0][0]; const copy={V:'Procesas mejor lo que ves: imágenes, esquemas, colores y demostraciones visuales te ayudan a conectar ideas.',A:'Procesas mejor lo que escuchas: las conversaciones, explicaciones y sonidos te dan las pistas más claras.',K:'Procesas mejor mediante la experiencia: movimiento, práctica y sensaciones son claves para aprender y decidir.'}; const pct=key=>Math.round(score[key]/questions.length*100); lastResult={score,winner,pct,copy:copy[winner]}; step.textContent='RESULTADO FINAL'; fill.style.width='100%'; restart.hidden=false; content.innerHTML=`<h2 class="result-title">¡Listo, ${personName}!</h2><p class="result-copy">Tu forma más natural de percibir la información aparece destacada aquí.</p><section class="result-hero"><div><p class="winner-overline">CANAL PERCEPTUAL PREDOMINANTE</p><p class="winner-name">${channelNames[winner]}</p></div><div class="winner-score"><strong>${pct(winner)}%</strong><span>${score[winner]} RESPUESTAS</span></div></section><section class="bar-chart" aria-label="Gráfica de resultados por canal">${['V','A','K'].map(key=>`<div class="chart-row ${key===winner?'is-winner':''}"><span class="chart-label">${channelNames[key]}</span><div class="chart-track"><div class="chart-value bar-${key.toLowerCase()}" style="width:${pct(key)}%">${pct(key)}%</div></div><div><div class="chart-total">${score[key]}</div><span class="chart-percent">DE 40</span></div></div>`).join('')}</section><p class="result-message">${copy[winner]} Recuerda: los tres canales forman parte de ti; este resultado solo indica cuál aparece con mayor frecuencia en este cuestionario.</p><button class="download-result" id="download-result" type="button">↓ Descargar mi resultado</button>`; document.querySelector('#download-result').onclick=downloadResult; }
+function roundedRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();ctx.stroke();}
+function downloadResult(){ if(!lastResult)return; const {score,winner,pct}=lastResult, canvas=document.createElement('canvas'), ctx=canvas.getContext('2d'), W=1400,H=820; canvas.width=W;canvas.height=H;
+  ctx.fillStyle='#F2E2CE';ctx.fillRect(0,0,W,H);ctx.fillStyle='#1EA4D9';ctx.strokeStyle='#121212';ctx.lineWidth=8;roundedRect(ctx,48,45,W-96,335,34);
+  ctx.fillStyle='#121212';roundedRect(ctx,88,83,555,54,12);ctx.fillStyle='#fff';ctx.font='500 24px monospace';ctx.fillText('TEST DE CANALES PERCEPTUALES',112,119);
+  ctx.fillStyle='#121212';ctx.font='900 42px sans-serif';ctx.fillText(`RESULTADO DE ${personName.toUpperCase()}`,90,195);ctx.font='900 122px sans-serif';ctx.fillText(channelNames[winner].toUpperCase(),86,310);
+  ctx.fillStyle='#F2E2CE';ctx.beginPath();ctx.arc(1190,225,100,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#121212';ctx.textAlign='center';ctx.font='900 70px sans-serif';ctx.fillText(`${pct(winner)}%`,1190,245);ctx.font='500 17px monospace';ctx.fillText('PREDOMINANTE',1190,277);ctx.textAlign='left';
+  const colors={V:'#23B7D9',A:'#F23030',K:'#1FA65A'}, keys=['V','A','K']; keys.forEach((key,i)=>{const y=448+i*105;ctx.fillStyle=colors[key];ctx.strokeStyle='#121212';ctx.lineWidth=6;roundedRect(ctx,74,y,1252,77,18);ctx.fillStyle='#121212';ctx.font='900 29px sans-serif';ctx.fillText(channelNames[key],100,y+48);ctx.fillStyle='#fff';ctx.strokeStyle='#121212';roundedRect(ctx,355,y+20,800,37,18);ctx.fillStyle=colors[key];ctx.strokeStyle='#121212';roundedRect(ctx,358,y+23,Math.max(15,792*pct(key)/100),31,14);ctx.fillStyle=key==='V'?'#121212':'#fff';ctx.font='900 39px sans-serif';ctx.textAlign='right';ctx.fillText(String(score[key]),1296,y+50);ctx.textAlign='left';});
+  ctx.fillStyle='#121212';ctx.font='500 18px monospace';ctx.fillText('TU MAPA PERCEPTUAL · 40 RESPUESTAS',76,780);canvas.toBlob(blob=>{const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`resultado-perceptual-${personName.toLowerCase().replace(/[^a-z0-9]+/gi,'-')||'test'}.png`;link.click();URL.revokeObjectURL(link.href);},'image/png'); }
+restart.onclick=()=>{answers.fill(null);current=-1;personName='';restart.hidden=true;render()}; render();
